@@ -1,0 +1,295 @@
+---
+title: "Levels of populist rhetoric among Norwegian mainstream parties now and in the last decade"
+author: "Aga Sadlowska"
+date: "19.05.2022"
+output: github_document
+        pdf_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/EXAM2020")
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60))
+
+
+library(readtext)
+library(tidyverse)
+library(quanteda)
+library(devtools)
+library(quanteda.sentiment)
+install.packages('tinytex', repos = "http://cran.us.r-project.org")
+library(tinytex)
+library(RColorBrewer)
+
+```
+
+# THE PROJECT
+
+  The aim of my project is to assess the levels of populist rhetoric in the Norwegian public debate now, and analyze the development of such levels in the last decade. Populism has been on the rise all over the Western world, its presence in the political mainstream increased. Although Norway has been spared for the more radical and dangerous variants, like Donald Trump or the Eastern European right, the discourse leading up to the 2021 parliamentary election was marked by politicians presenting themselves as representatives of the real people who know where the shoe pinches, as opposed to detached elites making their lives harder with decisions hatched in some posh bureau in the capital. I have used sentiment analysis to examine whether populist tendencies can be traced in the Norwegian parties' communication with the voters. The object of analysis were party manifestos adopted for the 2009, 2013, 2017 and 2021 parliamentary elections. To examine the impact of populism in the mainstream debate, I limited the analysis to the 9 parties that held seats in the Norwegian parliament through one or more of those four periods. I obtained the manifestos in pdf format from the web pages of the parties and the Norwegian Centre for Research Data. 
+
+# THE DICTIONARY
+
+  My first step was to create a dictionary of words that define populist rhetoric. This was more of an interpretative than a technical exercise, as the code itself is very simple, but the choice of words is not necessarily obvious. According to Pippa Norris and Ronald Inglehart's minimal definition, populism is a style of rhetoric claiming that legitimate power rests with "the poeple" not elites. It challenges the legitimate authority of the establishment and regards the voice of ordinary citizens as the only genuine form of democratic governance, even when at odds with expert judgment, because lived experience is considered superior to formal education (Pippa Norris and Ronald Inglehart 2019, *Cultural Backlash. Trump, Brexit and Authoritarian Populism*). Based on this definition, words and phrases like "the people" and "elites" seem like a good choice for a populist dictionary. However, no word is populist in itself. Saying "The people standing over there are wearing yellow vests" is obviously just a statement of a fact, not populism. Politicians saying "The people demand change", however, present themselves as ambassadors of the true will of the citizens and fit Norris and Inglehart's minimal criteria. It is the context that defines populism, not words or phrases, but in different political realities, some words and phrases are more frequently used in populist contexts than others. Identifying them requires one to be fairly versed in the relevant public debate, as debates in different countries have their own special context. In my dictionary, I decided to include words related to Norris and Inglehart's minimal definition, and words related to the concept of centralization. This concept is a product of the ever-salient Norwegian conflict between periphery an center, and paints a picture of Oslo-based bureaucrats and urban elites in opposition to the "real people" in the rural districts. This divide and the more obscure rhetorical construct of "ordinary people" were actively exploited in the 2021 parliamentary election by several major parties, mostly the agrarian Center Party (Senterpartiet), but also the Labor Party (Arbeiderpartiet) and the Progress Party (Fremskrittspartiet), who competed with the agrarians for the same groups of voters. 
+
+
+```{r dictionary, echo=TRUE}
+
+wordlist_populism <- dictionary(
+  x = list(match_populism = c( "vanlige folk*", "folk flest", "folket*", 
+                               "elite*", "folkelig*", "ekspert*", "byråkrat*", "sentraliser*", "desentraliser*", "folkeavstemning*")))
+
+```
+
+
+  The dictionary is a tool that enables to automatically count the chosen words in a text. Naturally, simply counting the words does not consider the individual context every time a word is used. It is therefore probable that some overestimation of the sentiment will occur. I was parsimonious with the number of words, as so not to add to this potential problem, although the bias it creates is random and I do not expect it to vary a lot between the individual texts. The comparison between texts should therefore still be valid.
+
+
+# SENTIMENT ANALYSIS
+  
+## General remarks
+As stated before, the parties included in the analysis were those who held seats in the parliament through one or more of the periods starting in 2009, 2013, 2017 and 2021. These parties (and their acronyms) are:
+
+  * The social democratic Labor Party (Arbeiderpartiet, Ap)
+  * The populist right Progress Party (Fremskrittspartiet, Frp)
+  * The conservative Høyre (H)
+  * The christian democratic Christian People's Party (Kristelig Folkeparti, KrF)
+  * The environmentalist green party (Miljøpartiet De Grønne, MDG)
+  * The communist Red (Rødt)
+  * The agrarian Center Party (Senterpartiet, Sp)
+  * The Socialist Left (Sosialistisk Venstreparti, SV)
+  * The liberal Venstre (V)
+
+The analyzed documents are working manifestos, that is programs adopted by the parties for each parliamentary period. Periods analyzed are 2009 to 2013, 2013 to 2017, 2017 to 2021 and the current period 2021 to 2025.
+
+## Sentiment analysis of the current manifestos
+  
+  In the first part of my analysis, the final goal was to create a bar plot that would allow to compare the levels of populist rhetoric in party manifestos at the time of the latest election in 2021. The first task was to import the documents into R, read them and create a corpus.
+  
+
+```{r read and corpus, error=TRUE}
+
+files_21 <- Sys.glob((paths = "./programmer/arb/*prog21.pdf"))
+
+texts_21 <- readtext(files_21)
+
+corpus_21 <- 
+  corpus(x = texts_21$text) %>%
+  tokens(remove_punct = TRUE, remove_numbers = TRUE) %>%
+  tokens_select(pattern = stopwords('no'), selection = 'remove') %>%
+  tokens_wordstem(language = quanteda_options('language_stemmer'))
+
+```
+  
+  
+  The next task was to count the words defining populist rhetoric using the previously created dictionary.
+  
+
+```{r word count, message=TRUE}
+
+popu_list_21 <- tokens_lookup(
+  x = corpus_21, 
+  dictionary = wordlist_populism, 
+  exclusive = TRUE)
+
+popu_list_21
+
+```
+
+  
+  As shown in the output, this code counts the words matching those included in the dictionary in each text included in the corpus.
+
+
+### The populism score
+  As the length of the manifestos varies, we cannot use the absolute number of populist words to score each manifest's levels of populism. The absolute word count must be weighted relative to the total document length. This was achieved with the code below. 
+  
+
+```{r scores, message=TRUE}
+
+scores_21 <- c(ntoken(popu_list_21))
+scores_21
+
+doc_length_21 <- c(ntoken(corpus_21))
+doc_length_21
+
+weights_21 <- doc_length_21/sum(doc_length_21) 
+weights_21 <- 1 - weights_21
+weights_21
+
+weighted_scores_21 <- scores_21*weights_21
+weighted_scores_21
+
+```
+
+
+  Although this code solves the problem of weighting, the scale it returns is not very intuitive, as the weighted scores are a product of mathematical operations performed on numbers which are, in layman's terms, random. I chose therefore to scale the scores. Scaling a variable returns a scale centered around the mean, where one scale unit equals one standard deviation. 
+  
+
+```{r scaling, message=TRUE}
+
+scaled_variable_21 <- scale(weighted_scores_21, center = TRUE, scale = TRUE)
+scaled_variable_21
+
+
+```
+
+
+  To compare the levels of populism, I chose to present the results with a bar plot using a data frame of the scaled scores. The plot shows the distribution of populism scores around the mean by party.
+  
+
+```{r plot, echo=FALSE, fig.align='center'}
+
+df_21 <- data.frame(scaled_variable_21) 
+
+rownames(df_21) <- c(
+  "Ap","Frp","H","KrF", "MDG", "Rødt", "Sp", "SV", "V")
+
+df_21 <- rownames_to_column(df_21)
+
+colnames(df_21) <- c("partyID", "score")
+
+print(df_21)
+
+party_color <- c("#CB181D", "#08306B", "#2171B5",
+                 "#FFD92F", "#74C476", "#A50F15",
+                 "#238B45", "#AE017E", "#01665E")
+
+ggplot(data = df_21, mapping = aes(x = partyID, y = score, fill = partyID)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) + 
+  scale_fill_manual(values = party_color) +
+  labs(title = "Distribution of populism scores around the mean",
+       subtitle = "Parliamentary election 2021",
+       x = "Party acronym",
+       y = "Populism score") +
+  theme(plot.margin = margin(t = 1, b = 1, unit = "cm"))
+
+```
+
+
+## The development of populist rhetoric in time
+  My next goal was to analyse the party manifestos for the four parliamentary periods from 2009 to the current one, to assess whether populism became more or less prevalent in the parties' communication overall, and whether each individual party uses more or less populist rhetoric than it did before. The code for reading, counting words and scoring the results is the same regardless of whether the number of documents is nine or thirty-six, and so I will not repeat it in the output. The data frames are slightly different. Naturally, I needed to include a year variable, and I also included the absolute scores, which I used in the presentation of the overall tendency for all parties as a total. In this presentation, I also had to drop repeating rows of the year variable from the overall data frame. Since it is an assessment of a development in time, I chose to present the results with a line graph. 
+  
+  
+```{r read, lookup, score, include=FALSE}
+
+files_all <- Sys.glob((paths = "./programmer/arb/*prog*.pdf"))
+
+texts_all <- readtext(files_all)
+
+corpus_all <- 
+  corpus(x = texts_all$text) %>%
+  tokens(remove_punct = TRUE, remove_numbers = TRUE) %>%
+  tokens_select(pattern = stopwords('no'), selection = 'remove') %>%
+  tokens_wordstem(language = quanteda_options('language_stemmer'))
+
+popu_list_all <- tokens_lookup(
+  x = corpus_all, 
+  dictionary = wordlist_populism, 
+  exclusive = TRUE)
+
+popu_list_all
+
+scores_all <- c(ntoken(popu_list_all))
+scores_all
+
+doc_length_all <- c(ntoken(corpus_all))
+doc_length_all
+
+weights_all <- doc_length_all/sum(doc_length_all) 
+weights_all <- 1 - weights_all
+weights_all
+
+weighted_scores_all <- scores_all*weights_all
+weighted_scores_all
+
+scaled_variable_all <- scale(weighted_scores_all, center = TRUE, scale = TRUE)
+scaled_variable_all
+
+```
+
+
+  The data frame and plot assessing the development in time by party:
+  
+  
+```{r data frame, echo=FALSE}
+
+df_scores <- data.frame(weighted_scores_all)
+
+df_years <- data.frame(rep(c("2009", "2013", "2017", "2021"), times = 9))
+
+df_partyID <- data.frame(rep(c(
+  "Ap", "Frp", "H", "KrF", "MDG", "Rødt", "Sp", "SV", "V"), each = 4))
+
+df_all <- cbind(df_partyID, df_years, df_scores)
+
+colnames(df_all) <- c("partyID", "year", "score")
+
+df_all <- df_all %>% 
+  mutate(scaled_score = scale(score, center = TRUE, scale = TRUE)) 
+
+print(df_all)
+
+```
+
+
+```{r plot all, echo=FALSE, fig.align='center'}
+
+ggplot(data = df_all, 
+       mapping = aes(x = year, 
+                     y = scaled_score, 
+                     group = partyID, 
+                     color = partyID))+
+  geom_line(aes(y = mean(scaled_score)), color = "black") +
+  geom_line() +
+  geom_point() +
+  scale_color_manual(values = party_color) +
+  facet_wrap(~partyID) +
+  labs(title = "Populist tendencies in party manifestos",
+       subtitle = "Development by party",
+       x = "Election year",
+       y = "Populism score") +
+  theme(plot.margin = margin(t = 1, b = 1, unit = "cm"))
+
+```
+
+
+  The data frame and plot assessing the development in time for all parties taken together:
+
+
+```{r overall data frame, echo=FALSE}
+
+df_distinct <- df_all %>% 
+  group_by(year) %>% 
+  mutate(mean_year = mean(score)) %>% 
+  select(year, mean_year) %>% 
+  distinct()
+
+print(df_distinct)
+
+```
+
+
+```{r plot overall tendency, echo=FALSE, fig.align='center'}
+
+ggplot(data = df_distinct, mapping = aes(x = year, y = mean_year)) +
+  geom_point(color = "orange") +
+  geom_line(group = 1, color = "orange", size = 1) +
+  labs(title = "Populist tendencies in party manifestos",
+       subtitle = "Mean of all parties by election year",
+       x = "Election year",
+       y = "Populism score") +
+  theme(plot.margin = margin(t = 1, b = 1, unit = "cm"))
+
+```
+
+
+# CONCLUSION
+
+  From the results of the sentiment analysis we can conclude as follows:
+    
+  1. There is a degree of polarization in the Norwegian public debate right now, with the parties using the most populist rhetoric being approximately twice as populist as the ones using the least populist rhetoric. 
+  2. The speed and direction of development of populist rhetoric in time vary from party to party and from year to year in the period of analysis. However, it is shown that Progress Party, Center Party and Red consequently keep their positions above the mean, whereas the conservatives, the Christian democrats, the greens and the liberals stay under the mean throughout the whole analysis period.
+  3. The level of populist rhetoric has increased since the 2009 parliamentary election, although the development is not linear.
+
+  I find it worth noting that the Labor Party, positioned under the mean in 2009, 2013 and 2017 made a somewhat sharp turn to more populist rhetoric and ended up slightly above the mean in 2021. My interpretation is that this might be due to their competition with the Center Party for the same voter groups. These two parties ultimately formed a minority government coalition after the 2021 election.
+  
+  

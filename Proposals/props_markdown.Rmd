@@ -1,0 +1,294 @@
+---
+title: "Do Norwegian MPs submit more MP proposals when their party is in opposition?"
+author: "Aga Sadlowska"
+date: "5/27/2021"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(rvest)
+library(ggthemes)
+library(RColorBrewer)
+library(tinytex)
+
+rm(list =ls())
+
+```
+
+```{r include = FALSE}
+#Creating a list of links for the period 2017-2021
+links_2017_2021 <- list(
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2017-2018&tab=Party#secondaryfilter",
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2018-2019&tab=Party#secondaryfilter",
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2019-2020&tab=Party#secondaryfilter",
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2020-2021&tab=Party#secondaryfilter"
+)
+
+#Creating a function to scrape data from the links and clean it 
+scrape_and_clean <- function(url) {
+  props <- read_html(url) %>%
+    html_nodes(css =".listing-group-title") %>%
+    html_text(trim = TRUE)
+  df <- data.frame(
+    "party_number" = props)
+  df %>%
+    separate(
+      party_number, 
+      into = c("party", "proposals"), 
+      sep = "[(,)]",
+      convert = TRUE
+    ) %>% 
+    arrange(desc(party))
+    }
+
+#Applying the function to the list. It returns a list of data frames.
+proplist <- lapply(links_2017_2021, scrape_and_clean)
+
+#Naming the four data frames on the list 
+names(proplist) = c(
+  "session_2017_2018", 
+  "session_2018_2019", 
+  "session_2019_2020", 
+  "session_2020_2021")
+
+#The data frame session_2019_2020 contains only 6 rows.
+#There were 9 parties in Stortinget in this period.
+view(proplist$session_2019_2020)
+
+#This is because in this session, the three government coalition parties, Høyre, Venstre and KrF, didn't submit any MP proposals at all. 
+#Thus they weren't listed on the website. I want them listed in my data. 
+#Creating a data frame with three rows and bind it with the data frame for 2019-2020.
+
+df_gov <- data.frame("party" = c("Høyre", "Venstre", "Kristelig Folkeparti"),
+                     "proposals" = c(0, 0, 0))
+
+proplist$session_2019_2020 <- rbind(df_gov, proplist$session_2019_2020)
+
+view(proplist$session_2019_2020)
+
+
+#Creating a function to visualize data as a bar plot
+#First, creating a color palette.
+party_color <- c("#CB181D", "#08306B", "#2171B5",
+                 "#FFD92F", "#74C476", "#A50F15",
+                 "#238B45", "#AE017E", "#01665E")
+
+plot_em <- function(proplist) {
+  ggplot(data = proplist,
+         mapping = aes(x = proposals, y = reorder(
+           party, proposals), fill = party))+
+        geom_bar(stat = "identity", show.legend = FALSE)+
+        scale_fill_manual(values = party_color)+
+    theme_fivethirtyeight()+
+    geom_text(mapping = aes(label = proposals))
+}
+
+```
+
+
+# THE AIM OF THE PROJECT
+
+The aim of my project is to assess if the number of MP proposals submitted to the Norwegian parliament in the last two terms by MPs from different parties is correlated with whether their party has been part of the incumbent prime minister Erna Solberg's government coalition  My expectation is to find more activity on the part of MPs from opposition parties than the ones from parties forming the Solberg Cabinet, because without their own people in governmental positions, the parliament is the best arena for political parties to influence policy and mark and communicate their stance. 
+
+# THE POLITICAL SITUATION
+
+The Solberg Cabinet took office in October 2013 after the 2013 parliamentary election and held their power after the 2017 parliamentary election. It has been in power through two parliamentary terms. 
+In the first term, 2013 to 2017, the Solberg Cabinet was a minority government, formed by the prime minster's party Høyre and her coalition partner, Fremskrittspartiet. It was supported by two other parties, Venstre and Kristelig Folkeparti, who signed a binding cooperation agreement with the two governing parties at the begining of the term (SNL 2021).
+The situation was more interesting in the current term, 2017 to 2021. The coalition underwent following transformations: 
+*   Kristelig Folkeparti decided no to sign a new cooperation agreement at the beginning of the term. 
+*   At the same time, Venstre started coalition negotiations with Høyre and Fremskrittspartiet and joined the cabinet in January 2018.
+*   In January 2019, Kristelig Folkeparti joined the coalition as well, making the government a majority coalition. 
+*   In January 2020, Fremskrittspartiet left the coalition in an atmosphere of conflict. That happened because the party disagreed with the three other partners' decision to bring a former female Norwegian ISIS member to Norway from the al-Hol refugee camp, in order to secure medical treatment for her children.
+
+# DATA
+
+I have used data from Stortinget's website. There, the proposals could be sorted by party, with number of proposals in brackets next to the name of the party, with each session of the term published on a separate page, selected from a drop-down menu. That means that I downloaded the data by web scraping them from four different urls for each term. I chose to start my survey with data from the more action-packed 2017-2021 term, as I expected to find more interesting variation. That applied especially to the parties associated with the Solberg Cabinet during the term, as their status changed from government party to opposition party and the other way around.
+It is important to note that the data shows the number of proposals each party's MPs contributed to submitting rather than number of proposals submitted by each party. Parties do not submit proposals, MPs do. Very often a proposal is submitted by more than one MP, and the contributing MPs do not necessarily belong to the same party. That means that the same proposal may be listed on the website repeatedly, as submitted by two or more parties, if MPs from two or more parties contributed.  However, the numbers still reveal which party's MPs have been the most active, and that is indeed the research question in the project.
+
+# ANALYSIS OF THE 2017-2021 TERM
+
+I used the scraped data to create four bar plots, one for each session of the term, to visualize the number of proposals each party's MP contributed to submitting.
+
+```{r fig.height = 2, fig.width = 4.4, include = FALSE, echo = FALSE, message = FALSE}
+
+fireplot <- lapply(proplist, plot_em)
+
+tittel <- c(
+  "Session 2017-2018", "Session 2018-2019", "Session 2019-2020", "Session 2020-2021")
+
+fireplottittel <- list()
+
+for (i in 1:length(tittel)) {
+  fireplottittel[[i]] <- fireplot[[i]] + 
+    ggtitle(tittel[i])
+}
+
+fireplottittel
+
+```
+
+<br>
+
+The plots support my expectations that the opposition MPs are more active. Sosialistisk Venstreparti, Senterpartiet and Arbeiderpartiet, three parties that have already ruled together from 2005 to 2013, and are perceived as a left wing alternative to the Solberg Cabinet, top every graph, together with Rødt. Or at least they did, until Fremskrittspartiet awakened in the 2019-2020 session (half of which they spent as an opposition party), and topped the graph with 102 proposals in the 202-2021 session, when they were outside the government coalition for the duration of the session. Venstre, who spent half of the 2017-2018 session in opposition, was markantly more active then than in any of the following sessions, contributing to 12 proposals. Even more active was Kristelig Folkeparti, who did not join the Solberg Cabinet until January 2019. In the 2017-2018 session the party contributed to 40 proposals, but went very quiet in the following sessions.
+
+```{r, include = FALSE}
+#Loading page
+link_2019_2020 <- read_html(
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?tab=Party&pid=2019-2020#primaryfilter")
+
+#Scraping the number of MP proposals by party
+props_2019_2020 <- link_2019_2020 %>%
+  html_nodes(css = ".listing-group-title") %>%
+  html_text(trim = TRUE)
+
+#Creating a data frame from the scraped data
+df_props_2019_2020 <- data.frame("party_number" = props_2019_2020)
+
+#Creating a data frame with the three lacking parties
+new_df_gov <- data.frame("party_number" = c(
+  "Høyre (0)", "Venstre (0)", "Kristelig Folkeparti (0)")) 
+
+#Binding the data frames together into a complete data frame for the session
+new_session_2019_2020 <- rbind(
+  df_props_2019_2020, new_df_gov) %>%
+  separate(
+    party_number, 
+    into = c("party", "proposals"), 
+    sep = "[(,)]",
+    convert = TRUE
+  ) %>% 
+  arrange(desc(party))
+
+#Binding all data frames for the 2017-2020 period together
+total_props <- rbind(proplist$session_2017_2018, proplist$session_2018_2019,
+                  new_session_2019_2020, proplist$session_2020_2021)
+
+#Creating a column with session years
+df <- data.frame("start" = 2017:2020, "end" = 2018:2021)
+
+df_years <- df %>%
+  mutate(count = c(9, 9, 9, 9)) %>%
+  uncount(count) %>% 
+  unite(session, c(start, end), sep = "-", remove = TRUE)
+
+#Creating one data frame with variables party, proposals, session
+total_frame <- cbind(df_years, total_props)
+```
+
+The sharp rise in Fremskrittspartiet's activity is especially striking when visualized on a line chart. 
+
+<br>
+
+```{r, include = TRUE, echo = FALSE, message = FALSE, results='hide', fig.width = 9, fig.height = 5}
+
+ggplot(data = total_frame)+
+  geom_smooth(mapping = aes(
+    x = session,
+    y = proposals,
+    group = party,
+    color = party))+
+  scale_color_manual(values = party_color)+
+  labs(title = "Parliamentary term 2017-2021",
+       x = "", y = "")
+  theme_fivethirtyeight()
+
+```
+
+# TEST ON THE 2013-2017 TERM
+
+```{r, include = FALSE}
+#Creating a list of links for the period 2013-2017, except the 2013_2014 session
+links_2013_2017 <- list(
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2014-2015&tab=Party#secondaryfilter",
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2015-2016&tab=Party#secondaryfilter",
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2016-2017&tab=Party#secondaryfilter"
+)
+
+#Applying scrape_and_clean to the list
+proplist2 <- lapply(links_2013_2017, scrape_and_clean)
+
+#Naming the three data frames on the list 
+names(proplist2) = c(
+  "session_2014_2015", 
+  "session_2015_2016", 
+  "session_2016_2017")
+
+#Loading page
+link_2013_2014 <- read_html(
+  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?tab=Party&pid=2013-2014#primaryfilter")
+
+#Scraping the number of MP proposals by party
+props_2013_2014 <- link_2013_2014 %>%
+  html_nodes(css = ".listing-group-title") %>%
+  html_text(trim = TRUE)
+
+#Creating a data frame from the scraped data
+df_props_2013_2014 <- data.frame("party_number" = props_2013_2014)
+
+#Creating a data frame with the three lacking parties
+df_frp <- data.frame("party_number" = c(
+  "Fremskrittspartiet (0)")) 
+
+#Binding the data frames together into a complete data frame for the session
+session_2013_2014 <- rbind(
+  df_props_2013_2014, df_frp) %>%
+  separate(
+    party_number, 
+    into = c("party", "proposals"), 
+    sep = "[(,)]",
+    convert = TRUE
+  ) %>% 
+  arrange(desc(party))
+
+#Binding all data frames for the 2017-2020 period together
+total_props2 <- rbind(session_2013_2014, proplist2$session_2014_2015,
+                  proplist2$session_2015_2016, proplist2$session_2016_2017)
+
+#Creating a column with session years
+df2 <- data.frame("start" = 2013:2016, "end" = 2014:2017)
+
+df_years2 <- df2 %>%
+  mutate(count = c(8, 8, 8, 8)) %>%
+  uncount(count) %>% 
+  unite(session, c(start, end), sep = "-", remove = TRUE)
+
+#Creating one data frame with variables party, proposals, session
+total_frame2 <- cbind(df_years2, total_props2)
+
+#Creating a new color palette, since Rødt wasn't represented in this period.
+#The chart needs one less color.
+party_color2 <- c("#CB181D", "#08306B", "#2171B5",
+                  "#FFD92F", "#74C476","#238B45", 
+                  "#AE017E", "#01665E")
+
+```
+
+To test my expectations on the 2013-2017 term, I started with a line chart to visualize the overall tendencies. I chose this less detailed approach, because I expected that the term would turn out to have been less eventful. The chart confirmed my expectations, and so I did not see the need to make bar charts for each session. 
+
+<br>
+
+```{r, include = TRUE, echo = FALSE, message = FALSE, results = 'hide', fig.width = 9, fig.height = 5}
+
+ggplot(data = total_frame2)+
+  geom_smooth(mapping = aes(
+    x = session,
+    y = proposals,
+    group = party,
+    color = party))+
+  scale_color_manual(values = party_color2)+
+  labs(title = "Parliamentary term 2013-2017",
+       x = "", y = "")+
+  theme_fivethirtyeight()
+
+```
+
+<br>
+
+The two coalition parties lay markedly lower than the opposition. The sharp rise in the activity of the MPs from Sosialistisk Venstreparti and Senterpartiet in the last session before the 2017 election is also wotrh noting. As for the two parties supporting the Solberg Cabinet, the cooperation agreement did not seem to hinder them from marking their presence, their MPs were far more active than those of the coalition parties.
+
+# CONCLUSIONS
+
+The data from the 2013-2017 term and 2017-2020 term supports my expectations that MPs from opposition parties are more active in submitting MP proposals than their colleagues from parties forming the governing coalition. The most important factor seems to be whether the party participates in forming the cabinet, rather than whether the party merely supports it in the parliament. Whether the support is structured by a binding agreement or not does not seem to play any large role, as evidenced in the 2013-2017 term. It is joining or leaving the coalition that immediately finds its reflection in the MPs activity levels.
