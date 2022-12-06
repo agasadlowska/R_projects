@@ -14,11 +14,9 @@ library(ggthemes)
 library(RColorBrewer)
 library(tinytex)
 
-rm(list =ls())
-
 ```
 
-```{r include = FALSE}
+```{r prep 2017-2021, include = FALSE}
 #Creating a list of links for the period 2017-2021
 links_2017_2021 <- list(
   "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2017-2018&tab=Party#secondaryfilter",
@@ -112,7 +110,9 @@ It is important to note that the data shows the number of proposals each party's
 
 I used the scraped data to create four bar plots, one for each session of the term, to visualize the number of proposals each party's MP contributed to submitting.
 
-```{r fig.height = 2, fig.width = 4.4, include = FALSE, echo = FALSE, message = FALSE}
+<br>
+
+```{r, fig.height = 2, fig.width = 4.4, include = TRUE, echo = FALSE, message = FALSE}
 
 fireplot <- lapply(proplist, plot_em)
 
@@ -133,6 +133,8 @@ fireplottittel
 <br>
 
 The plots support my expectations that the opposition MPs are more active. Sosialistisk Venstreparti, Senterpartiet and Arbeiderpartiet, three parties that have already ruled together from 2005 to 2013, and are perceived as a left wing alternative to the Solberg Cabinet, top every graph, together with Rødt. Or at least they did, until Fremskrittspartiet awakened in the 2019-2020 session (half of which they spent as an opposition party), and topped the graph with 102 proposals in the 202-2021 session, when they were outside the government coalition for the duration of the session. Venstre, who spent half of the 2017-2018 session in opposition, was markantly more active then than in any of the following sessions, contributing to 12 proposals. Even more active was Kristelig Folkeparti, who did not join the Solberg Cabinet until January 2019. In the 2017-2018 session the party contributed to 40 proposals, but went very quiet in the following sessions.
+
+<br>
 
 ```{r, include = FALSE}
 #Loading page
@@ -182,7 +184,7 @@ The sharp rise in Fremskrittspartiet's activity is especially striking when visu
 
 <br>
 
-```{r, include = TRUE, echo = FALSE, message = FALSE, results='hide', fig.width = 9, fig.height = 5}
+```{r, include = TRUE, echo = FALSE, message = FALSE, results = 'hide', fig.width = 9, fig.height = 5}
 
 ggplot(data = total_frame)+
   geom_smooth(mapping = aes(
@@ -199,7 +201,7 @@ ggplot(data = total_frame)+
 
 # TEST ON THE 2013-2017 TERM
 
-```{r, include = FALSE}
+```{r prep 2013-2017, include = FALSE}
 #Creating a list of links for the period 2013-2017, except the 2013_2014 session
 links_2013_2017 <- list(
   "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2014-2015&tab=Party#secondaryfilter",
