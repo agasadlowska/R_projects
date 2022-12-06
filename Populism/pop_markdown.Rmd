@@ -8,16 +8,14 @@ output: github_document
 
 ```{r setup, include=FALSE}
 
-knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/EXAM2020")
+knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/R_projects")
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60))
-
 
 library(readtext)
 library(tidyverse)
 library(quanteda)
 library(devtools)
 library(quanteda.sentiment)
-install.packages('tinytex', repos = "http://cran.us.r-project.org")
 library(tinytex)
 library(RColorBrewer)
 
@@ -171,7 +169,7 @@ ggplot(data = df_21, mapping = aes(x = partyID, y = score, fill = partyID)) +
   
 ```{r read, lookup, score, include=FALSE}
 
-files_all <- Sys.glob((paths = "./programmer/arb/*prog*.pdf"))
+files_all <- Sys.glob((paths = "./Data/*prog*.pdf"))
 
 texts_all <- readtext(files_all)
 
