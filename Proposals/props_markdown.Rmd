@@ -3,6 +3,7 @@ title: "Do Norwegian MPs submit more MP proposals when their party is in opposit
 author: "Aga Sadlowska"
 date: "5/27/2021"
 output: pdf_document
+  
 ---
 
 ```{r setup, include = FALSE}
