@@ -2,20 +2,18 @@
 title: "Levels of populist rhetoric among Norwegian mainstream parties now and in the last decade"
 author: "Aga Sadlowska"
 date: "19.05.2022"
-output: github_document
-        pdf_document
+output: [github_document, pdf_document]
 ---
 
 ```{r setup, include=FALSE}
 
-knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/R_projects")
+knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/R_projects/Populism")
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60))
 
 library(readtext)
 library(tidyverse)
 library(quanteda)
 library(devtools)
-library(quanteda.sentiment)
 library(tinytex)
 library(RColorBrewer)
 
@@ -66,7 +64,7 @@ The analyzed documents are working manifestos, that is programs adopted by the p
 
 ```{r read and corpus, error=TRUE}
 
-files_21 <- Sys.glob((paths = "./programmer/arb/*prog21.pdf"))
+files_21 <- Sys.glob((paths = "./data/*prog21.pdf"))
 
 texts_21 <- readtext(files_21)
 
