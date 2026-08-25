@@ -3,10 +3,13 @@ title: "Kortsiktige endringer i biltrafikk etter store hendelser på jernbanen"
 author: "Aga Sadlowska"
 date: "01/2023"
 output: [github_document, pdf_document]
+params:
+  lang: "no"
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = FALSE, fig.width = 12, fig.height = 8)
+knitr::opts_chunk$set(fig.path = paste0("figures-", params$lang, "/"))
 
 library(tidyverse)
 library(janitor)
@@ -15,6 +18,11 @@ library(knitr)
 
 options(scipen = 999)
 options(cli.unicode = FALSE)
+
+# Plottitler og akseetiketter finnes på norsk og engelsk, styrt av params$lang,
+# slik at både den norske og den engelske versjonen av porteføljesida kan
+# vise figurer med korrekt språk.
+t <- function(no, en) if (params$lang == "en") en else no
 
 ```
 
@@ -141,9 +149,9 @@ df_oslo %>%
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
         strip.text = element_text(size = 10),
         legend.position = "none") +
-  labs(title = "Biltrafikk mot Oslo i september 2022",
+  labs(title = t("Biltrafikk mot Oslo i september 2022", "Car traffic toward Oslo, September 2022"),
        x = "",
-       y = "Antall lette kjøretøy")
+       y = t("Antall lette kjøretøy", "Number of light vehicles"))
 
 ```
 
@@ -168,9 +176,9 @@ df_oslo %>%
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
         strip.text = element_text(size = 10),
         legend.position = "none") +
-  labs(title = "Test av dekningsgrad",
+  labs(title = t("Test av dekningsgrad", "Data coverage rate test"),
        x = "",
-       y = "Dekningsgrad i prosent")
+       y = t("Dekningsgrad i prosent", "Coverage rate (%)"))
 
 ```
 
@@ -198,9 +206,9 @@ df_des %>%
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
         strip.text = element_text(size = 10),
         legend.position = "none") +
-  labs(title = "Biltrafikk mot Oslo november 2022 - januar 2023",
+  labs(title = t("Biltrafikk mot Oslo november 2022 - januar 2023", "Car traffic toward Oslo, November 2022 - January 2023"),
        x = "",
-       y = "Antall lette kjøretøy")
+       y = t("Antall lette kjøretøy", "Number of light vehicles"))
 
 ```
 
@@ -226,9 +234,9 @@ df_des %>%
         plot.margin = margin(0.5,0.5,0.5,0.5, "cm"),
         strip.text = element_text(size = 10),
         legend.position = "none") +
-  labs(title = "Biltrafikk mot Oslo november 2022 - januar 2023",
+  labs(title = t("Biltrafikk mot Oslo november 2022 - januar 2023", "Car traffic toward Oslo, November 2022 - January 2023"),
        x = "",
-       y = "Antall lette kjøretøy")
+       y = t("Antall lette kjøretøy", "Number of light vehicles"))
 
 ```
 
