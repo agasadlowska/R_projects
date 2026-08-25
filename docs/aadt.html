@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Traffic After Major Rail Disruptions — Aga Sadlowska</title>
+<meta name="description" content="Does car traffic spike after major disruptions on the Oslo rail network? A short-term analysis of traffic-counter data from three 2022 incidents.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <p class="breadcrumb"><a href="index.html">← All projects</a></p>
+    <p class="eyebrow">R · Time series · Traffic data</p>
+    <h1>Does car traffic spike after major disruptions on the railway?</h1>
+    <p class="lede">A short-term analysis of traffic-counter data on the roads into Oslo, testing whether three high-profile rail incidents in late 2022 show up as a bump in car traffic in the days or weeks that followed.</p>
+    <div class="meta-row">
+      <span class="pill">Author: Aga Sadlowska</span>
+      <span class="pill">01/2023</span>
+    </div>
+    <div class="resource-row">
+      <a class="btn" href="https://github.com/agasadlowska/R_projects/tree/main/AADT">View repository</a>
+      <a class="btn" href="assets/aadt/biltrafikk_etter_hendelser.pdf">Full PDF report</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <article class="project">
+
+      <h2>The aim of the project</h2>
+      <p>The aim of this project is to check for a short-term behavioral response to bad news about the railway: does car traffic on the roads into Oslo rise in the days or weeks after a major, heavily-reported rail incident? The logic behind the expectation is straightforward — incidents that cause delays and cancellations and draw a lot of media attention could damage the railway's reputation and reduce commuters' trust in it, which in turn could push some of them into their cars.</p>
+
+      <h2>Data</h2>
+      <p>Car traffic volume data is published by the Norwegian Public Roads Administration (Statens vegvesen) and can be downloaded as CSV for a chosen location and time period from their <a href="https://www.vegvesen.no/trafikkdata/start/kart">traffic data portal</a>. Vehicles are counted continuously, around the clock, at fixed sensor points, which also register vehicle length and direction of travel — 5.6 metres is the cutoff used here between light and heavy vehicles.</p>
+      <p>Two datasets were used: one covering daily traffic for all of 2022 at the selected sensor points, and one covering 1 November 2022 – 31 January 2023 at the same points, used to zoom in on the two December incidents. Both datasets combine counts from the main approach roads into and out of Oslo:</p>
+      <ul>
+        <li>From the south — Taraldrud and Mosseveien by Fiskevollbukta</li>
+        <li>From the east — E6 at Karihaugen and the Karihaugen ramp toward Furuset</li>
+        <li>From the north — Gjelleråsen</li>
+        <li>From the west — Maritim-510B and the Granfoss tunnel toward Oslo</li>
+      </ul>
+      <p>Oslo was chosen because of three incidents that caused major disruption on the railway and were widely covered in the media: a ground fault at Oslo Central Station on 14 September 2022, a fallen overhead contact wire in the Romeriksporten tunnel on 12 December 2022, and the closure of the Follo Line on 19 December 2022. The sensor points were chosen as plausible commuting routes for people who have the train as a realistic alternative to driving.</p>
+
+      <h2>Method</h2>
+      <p>For each incident, a bar chart of daily light-vehicle traffic was plotted with a vertical line marking the incident date. The reasoning: if a rail incident really does push people toward their cars, that should show up as a visible bump in car traffic in the days immediately following. Only light vehicles were plotted, to isolate private commuters as far as possible from freight traffic.</p>
+
+      <h3>Ground fault at Oslo S, 14 September 2022</h3>
+      <p>This was tested first, across all seven sensor points for the month of September:</p>
+
+      <figure>
+        <img src="assets/aadt/september-jordfeil.png" alt="Bar charts: light-vehicle traffic toward Oslo at seven sensor points, September 2022, with a vertical line marking the 14 September incident">
+        <figcaption>Car traffic toward Oslo, September 2022 — vertical line marks the incident</figcaption>
+      </figure>
+
+      <p>The pattern is a clear, regular weekly rhythm with no visible break after 14 September. The irregular-looking dip at Taraldrud in the days around the incident turned out to be a data-quality artifact rather than a traffic effect — a check of the coverage-rate variable (which flags how much of the reporting period has good-quality data) showed a drop right around 12 September at that sensor:</p>
+
+      <figure>
+        <img src="assets/aadt/dekningsgrad-test.png" alt="Bar chart: data coverage rate at Taraldrud and Mosseveien sensor points, September 2022">
+        <figcaption>Data coverage rate check — Taraldrud shows a dip in data quality around 12 September; Mosseveien does not</figcaption>
+      </figure>
+
+      <p>Mosseveien was checked for the same reason, given its comparatively irregular traffic pattern, but no coverage issue was found there, and its traffic pattern doesn't appear to be affected by the incident either.</p>
+
+      <h3>Romeriksporten and the Follo Line, December 2022</h3>
+      <p>The same test was run on the two December incidents, using the November 2022 – January 2023 dataset. The conclusion is the same: no detectable rise in car traffic follows either incident.</p>
+
+      <figure>
+        <img src="assets/aadt/desember-kjoreledning.png" alt="Bar charts: light-vehicle traffic toward Oslo at the Karihaugen sensor points, November 2022-January 2023, with a vertical line marking the 12 December incident">
+        <figcaption>Car traffic toward Oslo via the eastern approach — vertical line marks the 12 December overhead-wire incident</figcaption>
+      </figure>
+
+      <figure>
+        <img src="assets/aadt/desember-follobanen.png" alt="Bar charts: light-vehicle traffic toward Oslo at the Taraldrud and Mosseveien sensor points, November 2022-January 2023, with a vertical line marking the 19 December Follo Line closure">
+        <figcaption>Car traffic toward Oslo via the southern approach — vertical line marks the 19 December Follo Line closure</figcaption>
+      </figure>
+
+      <p>The dominant pattern visible in both charts is a drop in traffic tied to the Christmas holidays, not to either incident — a reminder that both events happened close enough to the holiday period to make the underlying signal harder to isolate.</p>
+
+      <h2>Conclusion</h2>
+      <div class="conclusion-list">
+        <p>Across all three incidents, car traffic on the roads into Oslo stayed on its normal weekly rhythm — no rise is detectable in the days or weeks after any of them. A likely explanation is that the train simply accounts for a small share of overall travel in the Oslo area compared to cars, so even if some commuters did switch, they may be too few to register in the data — though confirming that would require comparing across all transport modes, including bus and possibly bike. It's also plausible that the effect of rail disruptions is further muted by widespread use of home-office days, which give commuters a third option beyond "drive" or "take the train."</p>
+      </div>
+
+      <p style="margin-top:32px; color: var(--text-muted); font-size: 0.9rem;">Data from the Norwegian Public Roads Administration's <a href="https://www.vegvesen.no/trafikkdata/">traffic data portal</a>; visualized with <a href="https://ggplot2.tidyverse.org/">ggplot2</a>. See the full <a href="https://github.com/agasadlowska/R_projects/blob/main/AADT/biltrafikk_etter_hendelser.Rmd">biltrafikk_etter_hendelser.Rmd</a> source for the complete, runnable code.</p>
+
+    </article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a href="index.html">← Back to all projects</a> · <a href="https://github.com/agasadlowska/R_projects">Source on GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
