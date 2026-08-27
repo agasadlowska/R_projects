@@ -52,8 +52,48 @@
       <p>Oslo er valgt av hensyn til tre hendelser som forårsaket store avvik på jernbanen og var mye omtalt i media: jordfeil på Oslo S 14.09.2022, kjøreledning som falt i Romeriksporten 12.12.2022 og stenging av Follobanen 19.12.2022. Målepunktene er valgt som mulige innfartsårer til Oslo for folk som har toget som et reelt alternativ til bil der de bor.</p>
 
       <h2>Analyse</h2>
-      <p>Datasettene inneholder informasjon om kjøreretning som ble omkodet for enkelt å skille mellom trafikken mot byen og fra byen ved hvert målepunkt.</p>
+      <p>Denne siden og <a href="aadt.html">den engelske versjonen</a> er begge generert fra samme R Markdown-kilde. Et <code>params$lang</code>-argument styrer om plottitler og akseetiketter vises på norsk eller engelsk, via en liten hjelpefunksjon:</p>
+
+<pre><code>t &lt;- function(no, en) if (params$lang == "en") en else no</code></pre>
+
+      <p>Datasettene inneholder informasjon om kjøreretning som ble omkodet for enkelt å skille mellom trafikken mot byen og fra byen ved hvert målepunkt:</p>
+
+<pre><code>oslo &lt;- read.csv("trafikkmengdeOslo2022.csv", header = TRUE,
+                  encoding = "latin1", sep = ";") %&gt;%
+  clean_names()
+
+oslo$dato &lt;- as.Date(oslo$dato)
+oslo[15:22] &lt;- sapply(oslo[, 15:22], as.numeric)
+oslo[oslo == 0] &lt;- NA
+
+df_oslo &lt;- oslo %&gt;%
+  filter(!felt == "Totalt") %&gt;%
+  filter(grepl('Totalt', felt)) %&gt;%
+  mutate(felt = ifelse(
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning OSLO" |
+    felt == "Totalt i retning Karihaugen" |
+    felt == "Totalt i retning Oslo Grense" |
+    felt == "Totalt i retning Furuset",
+    "Mot byen", "Fra byen"))</code></pre>
+
       <p>Av data i datasettene ble det laget søylediagrammer med innlagt vertikal linje på hendelsesdato. Antakelsen var at dersom store hendelser på jernbanen forårsaker en flukt fra bane til bil, ville det være synlig som oppgang i biltrafikken i dagene eller ukene umiddelbart etter hendelsen. Dette ble først testet på jordfeilen på Oslo S den 14. september 2022. Kun lette kjøretøy ble plottet, for å isolere privatbilister i størst mulig grad.</p>
+
+<pre><code>df_oslo %&gt;%
+  filter(between(dato, as.Date('2022-09-01'), as.Date('2022-09-30'))) %&gt;%
+  filter(!(felt == "Totalt")) %&gt;%
+  filter(!(felt == "Fra byen")) %&gt;%
+  select(navn, dato, felt, x_5_6m) %&gt;%
+  ggplot(mapping = aes(x = dato, y = x_5_6m, fill = felt)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  facet_wrap(~navn, scales = "fixed") +
+  geom_vline(xintercept = as.numeric(as.Date("2022-09-14"))) +
+  theme_minimal(base_size = 12) +
+  labs(title = t("Biltrafikk mot Oslo i september 2022",
+                  "Car traffic toward Oslo, September 2022"),
+       y = t("Antall lette kjøretøy", "Number of light vehicles"))</code></pre>
 
       <figure>
         <img src="assets/aadt/september-jordfeil.png" alt="Søylediagram: biltrafikk mot Oslo ved sju målepunkter, september 2022, med vertikal linje for hendelsen 14. september">
@@ -67,7 +107,7 @@
         <figcaption>Test av dekningsgrad — Taraldrud viser et fall i datakvalitet rundt 12. september, Mosseveien gjør det ikke</figcaption>
       </figure>
 
-      <p>Etter plotting av data etter hendelsen med kjøreledning i Romeriksporten 12. desember 2022 og stenging av Follobanen 19. desember 2022 er konklusjonen den samme: Det er ikke mulig å påvise en økning i biltrafikken i etterkant. En mulig forklaring er at toget står for en veldig liten del av transportarbeidet i Oslo i forhold til biltrafikken, men dette blir bare en gjetning uten en sammenligning av alle transportmidler, inkludert buss og kanskje sykkel, selv om tallene for sykkel muligens er veldig små. En annen utfordring knyttet til data for denne perioden er at hendelsene oppstod kort tid før jul. Den variasjonen man finner i trafikkmønsteret er nedgang i trafikken på grunn av juleferie.</p>
+      <p>Samme opprydding- og plottekode ble kjørt på nytt for de to hendelsene i desember, denne gangen på datasettet fra november 2022 – januar 2023 og med andre målepunkter og hendelsesdatoer, så koden gjentas ikke her — kun de resulterende grafene. Etter plotting av data etter hendelsen med kjøreledning i Romeriksporten 12. desember 2022 og stenging av Follobanen 19. desember 2022 er konklusjonen den samme: Det er ikke mulig å påvise en økning i biltrafikken i etterkant. En mulig forklaring er at toget står for en veldig liten del av transportarbeidet i Oslo i forhold til biltrafikken, men dette blir bare en gjetning uten en sammenligning av alle transportmidler, inkludert buss og kanskje sykkel, selv om tallene for sykkel muligens er veldig små. En annen utfordring knyttet til data for denne perioden er at hendelsene oppstod kort tid før jul. Den variasjonen man finner i trafikkmønsteret er nedgang i trafikken på grunn av juleferie.</p>
 
       <p>Graf kjøreledning:</p>
 

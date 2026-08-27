@@ -45,10 +45,51 @@
       <p>Oslo was chosen because of three incidents that caused major disruption on the railway and were widely covered in the media: a ground fault at Oslo Central Station on 14 September 2022, a fallen overhead contact wire in the Romeriksporten tunnel on 12 December 2022, and the closure of the Follo Line on 19 December 2022. The sensor points were chosen as plausible commuting routes for people who have the train as a realistic alternative to driving.</p>
 
       <h2>Method</h2>
+      <p>This page and its <a href="aadt-no.html">Norwegian counterpart</a> are both rendered from the same R Markdown source. A <code>params$lang</code> argument switches plot titles and axis labels between the two languages through a small helper function:</p>
+
+<pre><code>t &lt;- function(no, en) if (params$lang == "en") en else no</code></pre>
+
+      <p>Direction of travel is recoded from the raw sensor labels into two categories, "toward the city" and "away from the city":</p>
+
+<pre><code>oslo &lt;- read.csv("trafikkmengdeOslo2022.csv", header = TRUE,
+                  encoding = "latin1", sep = ";") %&gt;%
+  clean_names()
+
+oslo$dato &lt;- as.Date(oslo$dato)
+oslo[15:22] &lt;- sapply(oslo[, 15:22], as.numeric)
+oslo[oslo == 0] &lt;- NA
+
+df_oslo &lt;- oslo %&gt;%
+  filter(!felt == "Totalt") %&gt;%
+  filter(grepl('Totalt', felt)) %&gt;%
+  mutate(felt = ifelse(
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning Oslo" |
+    felt == "Totalt i retning OSLO" |
+    felt == "Totalt i retning Karihaugen" |
+    felt == "Totalt i retning Oslo Grense" |
+    felt == "Totalt i retning Furuset",
+    "Mot byen", "Fra byen"))</code></pre>
+
       <p>For each incident, a bar chart of daily light-vehicle traffic was plotted with a vertical line marking the incident date. The reasoning: if a rail incident really does push people toward their cars, that should show up as a visible bump in car traffic in the days immediately following. Only light vehicles were plotted, to isolate private commuters as far as possible from freight traffic.</p>
 
       <h3>Ground fault at Oslo S, 14 September 2022</h3>
       <p>This was tested first, across all seven sensor points for the month of September:</p>
+
+<pre><code>df_oslo %&gt;%
+  filter(between(dato, as.Date('2022-09-01'), as.Date('2022-09-30'))) %&gt;%
+  filter(!(felt == "Totalt")) %&gt;%
+  filter(!(felt == "Fra byen")) %&gt;%
+  select(navn, dato, felt, x_5_6m) %&gt;%
+  ggplot(mapping = aes(x = dato, y = x_5_6m, fill = felt)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  facet_wrap(~navn, scales = "fixed") +
+  geom_vline(xintercept = as.numeric(as.Date("2022-09-14"))) +
+  theme_minimal(base_size = 12) +
+  labs(title = t("Biltrafikk mot Oslo i september 2022",
+                  "Car traffic toward Oslo, September 2022"),
+       y = t("Antall lette kjøretøy", "Number of light vehicles"))</code></pre>
 
       <figure>
         <img src="assets/aadt-en/september-jordfeil.png" alt="Bar charts: light-vehicle traffic toward Oslo at seven sensor points, September 2022, with a vertical line marking the 14 September incident">
@@ -65,7 +106,7 @@
       <p>Mosseveien was checked for the same reason, given its comparatively irregular traffic pattern, but no coverage issue was found there, and its traffic pattern doesn't appear to be affected by the incident either.</p>
 
       <h3>Romeriksporten and the Follo Line, December 2022</h3>
-      <p>The same test was run on the two December incidents, using the November 2022 – January 2023 dataset. The conclusion is the same: no detectable rise in car traffic follows either incident.</p>
+      <p>The same cleaning and plotting code was re-run on the two December incidents, using the November 2022 – January 2023 dataset and pointed at different sensor points and incident dates, so it isn't repeated here — only the resulting charts. The conclusion is the same: no detectable rise in car traffic follows either incident.</p>
 
       <figure>
         <img src="assets/aadt-en/desember-kjoreledning.png" alt="Bar charts: light-vehicle traffic toward Oslo at the Karihaugen sensor points, November 2022-January 2023, with a vertical line marking the 12 December incident">
