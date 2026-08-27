@@ -2,12 +2,13 @@
 title: "Levels of populist rhetoric among Norwegian mainstream parties now and in the last decade"
 author: "Aga Sadlowska"
 date: "19.05.2022"
-output: [github_document, pdf_document]
+format:
+  gfm: default
+  pdf: default
 ---
 
 ```{r setup, include=FALSE}
 
-knitr::opts_knit$set(root.dir = "C:/Users/Gusia/Desktop/R_projects/Populism")
 knitr::opts_chunk$set(echo=TRUE, message=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60))
 
 library(readtext)
@@ -167,7 +168,7 @@ ggplot(data = df_21, mapping = aes(x = partyID, y = score, fill = partyID)) +
   
 ```{r read, lookup, score, include=FALSE}
 
-files_all <- Sys.glob((paths = "./Data/*prog*.pdf"))
+files_all <- Sys.glob((paths = "./data/*prog*.pdf"))
 
 texts_all <- readtext(files_all)
 
