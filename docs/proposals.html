@@ -86,7 +86,7 @@ proplist$session_2019_2020 &lt;- rbind(df_gov, proplist$session_2019_2020)
     geom_bar(stat = "identity", show.legend = FALSE) +
     scale_fill_manual(values = party_color) +
     theme_fivethirtyeight() +
-    geom_text(mapping = aes(label = proposals))
+    geom_text(mapping = aes(label = proposals), size = 3)
 }
 </code></pre>
 
