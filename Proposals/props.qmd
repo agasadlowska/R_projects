@@ -2,8 +2,9 @@
 title: "Do Norwegian MPs submit more MP proposals when their party is in opposition?"
 author: "Aga Sadlowska"
 date: "5/27/2021"
-output: pdf_document
-  
+format:
+  gfm: default
+  pdf: default
 ---
 
 ```{r setup, include = FALSE}
@@ -20,16 +21,16 @@ library(tinytex)
 ```{r prep 2017-2021, include = FALSE}
 #Creating a list of links for the period 2017-2021
 links_2017_2021 <- list(
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2017-2018&tab=Party#secondaryfilter",
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2018-2019&tab=Party#secondaryfilter",
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2019-2020&tab=Party#secondaryfilter",
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2020-2021&tab=Party#secondaryfilter"
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2017-2018&m=all",
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2018-2019&m=all",
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2019-2020&m=all",
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2020-2021&m=all"
 )
 
 #Creating a function to scrape data from the links and clean it 
 scrape_and_clean <- function(url) {
   props <- read_html(url) %>%
-    html_nodes(css =".listing-group-title") %>%
+    html_nodes(css =".grey-bar__header") %>%
     html_text(trim = TRUE)
   df <- data.frame(
     "party_number" = props)
@@ -140,11 +141,11 @@ The plots support my expectations that the opposition MPs are more active. Sosia
 ```{r, include = FALSE}
 #Loading page
 link_2019_2020 <- read_html(
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?tab=Party&pid=2019-2020#primaryfilter")
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2019-2020&m=all")
 
 #Scraping the number of MP proposals by party
 props_2019_2020 <- link_2019_2020 %>%
-  html_nodes(css = ".listing-group-title") %>%
+  html_nodes(css = ".grey-bar__header") %>%
   html_text(trim = TRUE)
 
 #Creating a data frame from the scraped data
@@ -205,9 +206,9 @@ ggplot(data = total_frame)+
 ```{r prep 2013-2017, include = FALSE}
 #Creating a list of links for the period 2013-2017, except the 2013_2014 session
 links_2013_2017 <- list(
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2014-2015&tab=Party#secondaryfilter",
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2015-2016&tab=Party#secondaryfilter",
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?pid=2016-2017&tab=Party#secondaryfilter"
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2014-2015&m=all",
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2015-2016&m=all",
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2016-2017&m=all"
 )
 
 #Applying scrape_and_clean to the list
@@ -221,11 +222,11 @@ names(proplist2) = c(
 
 #Loading page
 link_2013_2014 <- read_html(
-  "https://www.stortinget.no/no/Saker-og-publikasjoner/Publikasjoner/Representantforslag/?tab=Party&pid=2013-2014#primaryfilter")
+  "https://www.stortinget.no/no/saker-og-publikasjoner/publikasjoner/representantforslag/?tab=Party&pid=2013-2014&m=all")
 
 #Scraping the number of MP proposals by party
 props_2013_2014 <- link_2013_2014 %>%
-  html_nodes(css = ".listing-group-title") %>%
+  html_nodes(css = ".grey-bar__header") %>%
   html_text(trim = TRUE)
 
 #Creating a data frame from the scraped data
