@@ -1,0 +1,167 @@
+---
+title: "You might want to flip the page"
+subtitle: "A natural experiment on first-page advantage in municipal elections in Oslo"
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{float}
+toc: false
+papersize: a4
+number-sections: true
+number-depth: 3
+indent: true
+linestretch: 1.5
+fontsize: "12"
+mainfont: Arial
+execute:
+  eval: true
+  echo: false
+  output: false
+bibliography: references.bib
+editor: visual
+---
+
+```{r loading packages and data}
+
+rm(list = ls())
+
+library(tidyverse)
+library(gtsummary)
+
+# Loading data
+# The data set is derived from the Local Candidate Dataset by Fiva, Sørensen
+# and Vøllo (2024) and Norwegian Parliamentary Elections 1906-2021 by Fiva and
+# Smith (2024), both available at <https://www.jon.fiva.no/data.htm>.
+# It covers candidates of nine major parties in the Oslo municipal elections
+# of 2011, 2015, 2019 and 2023.
+
+allmydata <- read_csv("data/mydata.csv")
+
+```
+
+# Background
+
+## The ballots and the hypothesis
+
+In Norwegian elections each political party prepares its own ballot paper, listing only that party's candidates. Because of the number of seats on the Oslo City Council, Oslo is covered by the provision stating that municipalities electing more than 43 and up to 67 representatives must use a ballot paper with two folds [@Lovdata]. A voter arriving at the polling station receives a folded ballot, which means that she only sees the first 31 candidates. The cut-off was number 30 under the ballot layout used in 2011 and 2015, and number 31 under the layout adopted in February 2019 and applied in the 2019 and 2023 elections. Unless the voter unfolds the ballot, she will never even peruse the rest of the names.
+
+The voter may simply cast a party vote, or she may mark an X in the box next to the name of one or more candidates, giving them a personal vote. The parties may also endow up to ten candidates with vote addition (stemmetillegg), an equivalent of a quarter of a personal vote for every ballot their party polls. Those candidates are printed at the top of the list in a bold font.
+
+This gives rise to the hypothesis tested here:
+
+H2: In municipal elections in Oslo, there is a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes.
+
+## The natural experiment
+
+The subset of data used in the natural experiment includes candidates running for the conservatives (Høyre) in the 2011 election, and for the liberals (Venstre). In 2011, the conservatives chose to order their candidates without vote addition, i. e. from number 11 to 65, alphabetically. The liberals always use alphabetical order below a certain position on the list. In 2011 and 2015 the candidates were ordered alphabetically beginning with number 17, in 2019 and 2023 it was candidates beginning with, respectively, number 21 and 25.
+
+Since being born with a surname beginning with any letter should not be correlated with variables such as political experience or celebrity status, the alphabetical ordering creates conditions of a natural experiment. Due to the as-if-random ordering of the candidates, the natural experiment warrants causal inference: the estimated effects should be solely due to the ordering of candidates and their position on the ballot.
+
+Candidates with vote addition are excluded, as they are not randomly assigned to their positions, and are susceptible to the problem of endogeneity that makes it so difficult to establish causality in ballot position research. Additionally, in 2019 and 2023 Venstre handed the last, honorable spot number 65 to the party veteran Odd Einar Dørum. He is excluded from the natural experiment, since he was not subject to alphabetical ordering. One outlier who received almost 4000 personal votes, whereas none of the others surpassed 2000, is removed as well.
+
+## Variables
+
+The response variable is `personalvotes_own_loc`, the number of personal votes from voters casting a party vote for the candidate's own party. Write-in votes from voters casting a party vote for another party (slengere) are deliberately left out: a swing vote is an active choice, presupposing either familiarity with the candidate or some other conscious rationale, and the box where such names are written is spatially distinct from the numbered list. These votes are therefore not expected to be susceptible to ballot position effects.
+
+The treatment variable is `first_page`, constructed from the candidate's ballot position (`rank_loc`) and the ballot layout in force in the given election year. It is coded 1 for candidates listed on the first page of the folded ballot, 0 otherwise.
+
+```{r data set alpha}
+
+alphadata <- allmydata %>%
+  filter(partyname_loc == "høyre" &
+           year == 2011 &
+           rank_loc > 10|
+         partyname_loc == "venstre" &
+           year %in% c(2011, 2015) &
+           rank_loc > 16|
+           partyname_loc == "venstre" &
+           year == 2019 &
+           between(rank_loc, 21, 64)|
+           partyname_loc == "venstre" &
+           year == 2023 &
+           between(rank_loc, 25, 64)) %>% # Filtering the alphabetically ordered observations
+  select(partyname_loc, candidatename_std, year, rank_loc, personalvotes_own_loc,
+         elected_loc, experience, female, foreign) %>%
+  filter(personalvotes_own_loc < 2000) %>%  # Removed an outlier with 3593 votes
+# whereas all the others have less than 2000
+  mutate(
+    first_page =
+      case_when(rank_loc > 30 & year < 2019 ~ 0,
+                rank_loc > 31 & year > 2015 ~ 0,
+                .default = 1)) # First page variable
+
+```
+
+# Comparison of means
+
+According to hypothesis 2, one should expect a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes. I test this hypothesis with a comparison of means between the alphabetically ordered candidates listed on the first page of the ballot and the alphabetically ordered candidates listed on the second and third page.
+
+To compare the mean of personal votes received by the candidates who are listed on the first page with the ones who are not, I first summarize the two groups with a box plot.
+
+At a mere glance, @fig-boxplot clearly indicates that the mean number of personal votes is indeed larger in the group of candidates listed on the first page of the ballot.
+
+```{r boxplot alpha}
+#| output: true
+#| label: fig-boxplot
+#| fig-cap: "Comparison of mean personal votes between candidates listed on the first page and others"
+#| fig-pos: 'H'
+
+
+ggplot(alphadata, aes(x = factor(first_page),
+                      y = personalvotes_own_loc,
+                     group = first_page,
+                     fill = factor(first_page)))+
+  geom_boxplot()+
+
+  labs(x = "",
+       y = "Number of personal votes")+
+  scale_x_discrete(labels = c("Not first page", "First page"))+
+  theme_classic()+
+  theme(legend.position = "none")
+
+```
+
+To examine whether the difference is statistically significant, I perform a t-test.
+
+```{r t test alpha}
+#| output: true
+#| label: tbl-ttest
+#| tbl-cap: "T-test results"
+#| tbl-pos: "H"
+
+alphadata %>%
+  mutate(
+    first_page_ttest = factor(
+      first_page, labels = c("Not first page", "First page"))) %>% # Adding a column with labels for the two comparison groups
+
+  select(first_page_ttest, personalvotes_own_loc) %>% # Selecting variables to display
+
+  tbl_summary( # Creating the table
+    by = first_page_ttest,
+    label = list(personalvotes_own_loc ~ "Personal votes"),
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{p}%"
+    ),
+    missing = "no"
+  ) %>%
+  add_difference() %>%
+  add_n() %>%
+  modify_header(all_stat_cols() ~ "**{level}**") %>%
+  modify_footnote(all_stat_cols() ~ NA)
+
+```
+
+@tbl-ttest shows the results of the t-test. The difference in means is 144 votes to the benefit of the candidates listed on the first page. With a p-value of $0.001$, the result is significant at 95% confidence level. True difference in means between candidates listed on the first page and the remaining candidates is not equal to $0$. This indicates that the candidates receive more personal votes only by virtue of being listed on the first page of the ballot and confirms hypothesis 2.
+
+# Discussion
+
+The advantage candidates seem to gain only by virtue of being listed on the first page suggests that it should be a system that is truly random. The alphabetical ordering is not truly random, because not everyone has the same probability of receiving the advantageous position. Alphabetical ordering disadvantages candidates by means of a rule they cannot escape unless they legally change their surname. For candidates who run for elections multiple times, the disadvantage will be transferred from one election to the next, apart from possible repositioning at the cut-off point between the first and the second page due to varying numbers of candidates with different surnames.
+
+It would be beneficial to supplement a quantitative analysis like this one with qualitative research on the voters' perception of the ballots. Do they perceive the ordering of the names on the ballot as ranking? Do they notice alphabetical ordering? How many never move beyond the first page of the ballot?
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
