@@ -44,21 +44,21 @@ allmydata <- read_csv("data/mydata.csv")
 
 ## The ballots and the hypothesis
 
-In Norwegian elections each political party prepares its own ballot paper, listing only that party's candidates. Because of the number of seats on the Oslo City Council, Oslo is covered by the provision stating that municipalities electing more than 43 and up to 67 representatives must use a ballot paper with two folds [@Lovdata]. A voter arriving at the polling station receives a folded ballot, which means that she only sees the first 31 candidates. The cut-off was number 30 under the ballot layout used in 2011 and 2015, and number 31 under the layout adopted in February 2019 and applied in the 2019 and 2023 elections. Unless the voter unfolds the ballot, she will never even peruse the rest of the names.
+In Norwegian elections each political party has its own ballot paper, listing only that party's candidates. Because of the number of seats on the Oslo City Council (59), Oslo is covered by the provision stating that municipalities electing more than 43 and up to 67 representatives must use a ballot paper with two folds [@Lovdata]. A voter arriving at the polling station receives a folded ballot, which means that, at first glance, she only sees page one, listing the first 30 or 31 of potentially 65 candidates. The cut-off was number 30 under the ballot layout used in 2011 and 2015, and number 31 under the layout adopted in February 2019 and applied in the 2019 and 2023 elections. Unless the voter unfolds the ballot, she will never even peruse the rest of the names.
 
-The voter may simply cast a party vote, or she may mark an X in the box next to the name of one or more candidates, giving them a personal vote. The parties may also endow up to ten candidates with vote addition (stemmetillegg), an equivalent of a quarter of a personal vote for every ballot their party polls. Those candidates are printed at the top of the list in a bold font.
+This ballot layout gives rise to the hypothesis tested here:
 
-This gives rise to the hypothesis tested here:
-
-H2: In municipal elections in Oslo, there is a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes.
+H1: In municipal elections in Oslo, there is a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes.
 
 ## The natural experiment
 
-The subset of data used in the natural experiment includes candidates running for the conservatives (Høyre) in the 2011 election, and for the liberals (Venstre). In 2011, the conservatives chose to order their candidates without vote addition, i. e. from number 11 to 65, alphabetically. The liberals always use alphabetical order below a certain position on the list. In 2011 and 2015 the candidates were ordered alphabetically beginning with number 17, in 2019 and 2023 it was candidates beginning with, respectively, number 21 and 25.
+In municipal elections, the voter may simply cast a party vote by putting the party list into the ballot box unchanged, or she may mark an X in the box next to the name of one or more candidates, giving them a personal vote and thus increasing their chances to win a mandate. The parties may also endow up to ten candidates with vote addition (stemmetillegg), an equivalent of a quarter of a personal vote for every ballot their party polls. Those candidates are printed at the top of the list in a bold font.
+
+The subset of data used in the natural experiment includes candidates running for the Conservative Party (Høyre) in the 2011 election, and for the Liberal Party (Venstre). In 2011, the conservatives chose to order their candidates without vote addition, i. e. from number 11 to 65, alphabetically. The liberals always use alphabetical order below a certain position on the list. In 2011 and 2015 the candidates were ordered alphabetically beginning with number 17, in 2019 and 2023 it was candidates beginning with, respectively, number 21 and 25. The inconsistent cutoff point from election to election might be due to some candidates challenging the order proposed by the selection committee and winning such a challenge in an internal party vote, in order to have their name listed on the first page. I read this as a testimony to the fact that the assumption of it being advantageous to be listed on the first page not only lives, but also prompts candidates to take action.
 
 Since being born with a surname beginning with any letter should not be correlated with variables such as political experience or celebrity status, the alphabetical ordering creates conditions of a natural experiment. Due to the as-if-random ordering of the candidates, the natural experiment warrants causal inference: the estimated effects should be solely due to the ordering of candidates and their position on the ballot.
 
-Candidates with vote addition are excluded, as they are not randomly assigned to their positions, and are susceptible to the problem of endogeneity that makes it so difficult to establish causality in ballot position research. Additionally, in 2019 and 2023 Venstre handed the last, honorable spot number 65 to the party veteran Odd Einar Dørum. He is excluded from the natural experiment, since he was not subject to alphabetical ordering. One outlier who received almost 4000 personal votes, whereas none of the others surpassed 2000, is removed as well.
+Candidates with vote addition are excluded, as they are not randomly assigned to their positions, and are susceptible to the problem of endogeneity that makes it difficult to establish causality in ballot position research. Additionally, in 2019 and 2023 Venstre handed the last, honorable spot number 65 to the party veteran Odd Einar Dørum. He is excluded from the natural experiment, since he was not subject to alphabetical ordering. One outlier who received almost 4000 personal votes, whereas none of the others surpassed 2000, is removed as well.
 
 ## Variables
 
@@ -95,7 +95,7 @@ alphadata <- allmydata %>%
 
 # Comparison of means
 
-According to hypothesis 2, one should expect a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes. I test this hypothesis with a comparison of means between the alphabetically ordered candidates listed on the first page of the ballot and the alphabetically ordered candidates listed on the second and third page.
+According to hypothesis 1, one should expect a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes. I test this hypothesis with a comparison of means between the alphabetically ordered candidates listed on the first page of the ballot and the alphabetically ordered candidates listed on the second and third page.
 
 To compare the mean of personal votes received by the candidates who are listed on the first page with the ones who are not, I first summarize the two groups with a box plot.
 
@@ -153,7 +153,7 @@ alphadata %>%
 
 ```
 
-@tbl-ttest shows the results of the t-test. The difference in means is 144 votes to the benefit of the candidates listed on the first page. With a p-value of $0.001$, the result is significant at 95% confidence level. True difference in means between candidates listed on the first page and the remaining candidates is not equal to $0$. This indicates that the candidates receive more personal votes only by virtue of being listed on the first page of the ballot and confirms hypothesis 2.
+@tbl-ttest shows the results of the t-test. The difference in means is 144 votes to the benefit of the candidates listed on the first page. With a p-value of $0.001$, the result is significant at 95% confidence level. True difference in means between candidates listed on the first page and the remaining candidates is not equal to $0$. This indicates that the candidates receive more personal votes only by virtue of being listed on the first page of the ballot and confirms hypothesis 1.
 
 # Discussion
 
