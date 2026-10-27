@@ -231,3 +231,55 @@ figcaption {
   border-radius: var(--radius);
   padding: 20px 28px;
 }
+
+.authorship-box {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 28px 0 8px;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.authorship-box .badge {
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.authorship-box strong {
+  color: var(--accent);
+}
+
+.authorship-box p {
+  margin: 0;
+}
+
+article.project table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 0.92rem;
+}
+
+article.project th,
+article.project td {
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  text-align: left;
+}
+
+article.project thead th {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+article.project tbody th {
+  font-weight: 600;
+  color: var(--text-muted);
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ballot Position Natural Experiment — Aga Sadlowska</title>
+<meta name="description" content="A natural experiment testing whether candidates listed on the first page of a folded ballot get a disproportional share of personal votes in Oslo municipal elections.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <p class="breadcrumb"><a href="index.html">← All projects</a> · <a href="ballot-position-no.html">Norsk versjon</a></p>
+    <p class="eyebrow">R · Statistics · Natural experiment</p>
+    <h1>You might want to flip the page</h1>
+    <p class="lede">A natural experiment testing whether candidates listed on the first page of a folded ballot get a disproportional share of personal votes in Oslo municipal elections.</p>
+    <div class="meta-row">
+      <span class="pill">Author: Aga Sadlowska</span>
+      <span class="pill">05.2024</span>
+    </div>
+    <div class="resource-row">
+      <a class="btn" href="https://github.com/agasadlowska/R_projects/tree/main/BallotPosition">View repository</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <article class="project">
+
+      <div class="authorship-box">
+        <span class="badge">🖋️</span>
+        <p><strong>Original work.</strong> This analysis is an extract from my own master's thesis, <em>"You might want to flip the page: Ballot position effects in municipal elections in Oslo"</em> (University of Oslo, 2024). The text, code, and data preparation here are my own.</p>
+      </div>
+
+      <h2>The project</h2>
+      <p>Ballots in Norwegian municipal elections in Oslo are folded. A voter arriving at the polling station receives a folded ballot and sees only the first 31 candidates — the cut-off was number 30 under the layout used in 2011 and 2015, and number 31 under the layout applied in 2019 and 2023. Unless she unfolds the ballot, she never even peruses the rest of the names.</p>
+      <p>This project tests whether that matters:</p>
+      <blockquote>
+        <p><strong>H1:</strong> In municipal elections in Oslo, there is a bias towards candidates listed on the first page of the ballot, resulting in them receiving a disproportional share of personal votes.</p>
+      </blockquote>
+
+      <h2>The natural experiment</h2>
+      <p>Establishing causality in ballot position research is hard, because parties rank candidates deliberately: the candidates placed high on the list are the ones parties expect to do well, so ballot position is endogenous. Two parties in Oslo solve this problem by accident, ordering part of their list alphabetically:</p>
+      <ul>
+        <li>the Conservative Party (Høyre) ordered all their candidates without vote addition — numbers 11 to 65 — alphabetically in 2011</li>
+        <li>the Liberal Party (Venstre) always use alphabetical order below a certain position: from number 17 in 2011 and 2015, from number 21 in 2019, and from number 25 in 2023</li>
+      </ul>
+      <p>Being born with a surname beginning with any given letter should not be correlated with political experience, celebrity status, or anything else that attracts personal votes. The alphabetical ordering therefore creates as-if-random conditions, and the estimated effect should be solely due to the candidates' position on the ballot.</p>
+      <p>Candidates with vote addition (stemmetillegg) are excluded, since they are not randomly assigned to their positions. So is the party veteran Odd Einar Dørum, who was handed the last, honorable spot number 65 by Venstre in 2019 and 2023 outside the alphabetical order, and one outlier who received almost 4000 personal votes where none of the others surpassed 2000.</p>
+      <p>This leaves 236 candidates, 66 of them on the first page of the ballot.</p>
+
+      <h2>The analysis</h2>
+      <p>The response variable is the number of personal votes from voters casting a party vote for the candidate's own party (<code>personalvotes_own_loc</code>). The treatment variable, <code>first_page</code>, is built from the candidate's ballot position and the ballot layout in force in the given election year:</p>
+
+<pre><code>mutate(
+  first_page =
+    case_when(rank_loc > 30 &amp; year &lt; 2019 ~ 0,
+              rank_loc > 31 &amp; year > 2015 ~ 0,
+              .default = 1))</code></pre>
+
+      <p>The two groups are summarized with a box plot, and the difference in means tested with a t-test.</p>
+
+      <figure>
+        <img src="assets/ballot-position/boxplot-en.png" alt="Box plot comparing personal votes between candidates listed on the first page of the ballot and candidates listed on the remaining pages">
+        <figcaption>Personal votes by first-page status among alphabetically ordered candidates</figcaption>
+      </figure>
+
+      <h2>The result</h2>
+      <table>
+        <thead>
+          <tr><th></th><th>Not first page</th><th>First page</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>n</th><td>170</td><td>66</td></tr>
+          <tr><th>Mean personal votes (SD)</th><td>184 (241)</td><td>328 (315)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="conclusion-list">
+        <p>The difference in means is <strong>144 votes</strong> to the benefit of the candidates listed on the first page. With a p-value of 0.001, the result is significant at the 95% confidence level: the true difference in means is not equal to 0. The candidates receive more personal votes only by virtue of being listed on the first page of the ballot, which confirms the hypothesis.</p>
+      </div>
+
+      <p>Because the advantage comes down to the fold in the paper rather than to anything the candidates did, it is worth noting that alphabetical ordering is not a fair substitute for a ranking either. It is not truly random — candidates cannot escape their surname unless they legally change it, and for candidates who run repeatedly, the disadvantage carries from one election to the next.</p>
+
+      <h2>The data</h2>
+      <p>The underlying data set covers candidates of the nine parties with stable representation on the Oslo City Council in the municipal elections of 2011, 2015, 2019 and 2023. It is derived from two data sets available at <a href="https://www.jon.fiva.no/data.htm">jon.fiva.no/data.htm</a>: the Local Candidate Dataset (LCD v12) by Jon H. Fiva, Rune J. Sørensen and Reidar Vøllo, and Norwegian Parliamentary Elections 1906–2021 by Jon H. Fiva and Daniel M. Smith.</p>
+
+      <p style="margin-top:32px; color: var(--text-muted); font-size: 0.9rem;">Analysis performed in R using <a href="https://www.tidyverse.org/">tidyverse</a> and <a href="https://www.danieldsjoberg.com/gtsummary/">gtsummary</a>. See the full <a href="https://github.com/agasadlowska/R_projects/blob/main/BallotPosition/first_page_natural_experiment.qmd">first_page_natural_experiment.qmd</a> source for the complete, runnable code.</p>
+
+    </article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a href="index.html">← Back to all projects</a> · <a href="https://github.com/agasadlowska/R_projects">Source on GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>

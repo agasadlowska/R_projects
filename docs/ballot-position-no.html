@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naturlig eksperiment om listeplass — Aga Sadlowska</title>
+<meta name="description" content="Et naturlig eksperiment som tester om kandidater som står på forsiden av en falset stemmeseddel får en uforholdsmessig stor andel personstemmer i kommunevalget i Oslo.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <p class="breadcrumb"><a href="index.html">← Alle prosjekter</a> · <a href="ballot-position.html">English version</a></p>
+    <p class="eyebrow">R · Statistikk · Naturlig eksperiment</p>
+    <h1>Man bør kanskje brette ut stemmeseddelen</h1>
+    <p class="lede">Et naturlig eksperiment som tester om kandidater som står på forsiden av en falset stemmeseddel får en uforholdsmessig stor andel personstemmer i kommunevalget i Oslo.</p>
+    <div class="meta-row">
+      <span class="pill">Forfatter: Aga Sadlowska</span>
+      <span class="pill">05.2024</span>
+    </div>
+    <div class="resource-row">
+      <a class="btn" href="https://github.com/agasadlowska/R_projects/tree/main/BallotPosition">Se kildekoden</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <article class="project">
+
+      <div class="authorship-box">
+        <span class="badge">🖋️</span>
+        <p><strong>Eget arbeid.</strong> Denne analysen er et utdrag fra min egen masteroppgave, <em>«You might want to flip the page: Ballot position effects in municipal elections in Oslo»</em> (Universitetet i Oslo, 2024). Teksten, koden og databehandlingen her er min egen.</p>
+      </div>
+
+      <h2>Prosjektet</h2>
+      <p>Stemmesedlene i kommunevalget i Oslo er falset. En velger som kommer til valglokalet, får en falset stemmeseddel og ser bare de første 31 kandidatene — grensen var nummer 30 under utformingen som ble brukt i 2011 og 2015, og nummer 31 under utformingen som ble brukt i 2019 og 2023. Med mindre velgeren bretter ut stemmeseddelen, får hun aldri sett resten av navnene.</p>
+      <p>Dette prosjektet tester om det har betydning:</p>
+      <blockquote>
+        <p><strong>H1:</strong> I kommunevalget i Oslo er det en forskjellsbehandling til fordel for kandidater som står på forsiden av stemmeseddelen, slik at de får en uforholdsmessig stor andel personstemmer.</p>
+      </blockquote>
+
+      <h2>Det naturlige eksperimentet</h2>
+      <p>Det er vanskelig å fastslå kausalitet i forskning på listeplasseffekter, fordi partiene rangerer kandidatene med overlegg: kandidatene som står høyt på listen, er de partiet forventer skal gjøre det bra, slik at listeplass er endogen. To partier i Oslo løser dette problemet ved et uhell, ved å ordne deler av listen alfabetisk:
+
+      </p>
+      <ul>
+        <li>Høyre ordnet alle sine kandidater uten stemmetillegg — nummer 11 til 65 — alfabetisk i 2011</li>
+        <li>Venstre bruker alltid alfabetisk ordning under en bestemt posisjon på listen: fra nummer 17 i 2011 og 2015, fra nummer 21 i 2019, og fra nummer 25 i 2023</li>
+      </ul>
+      <p>Å være født med et etternavn som begynner med en bestemt bokstav, bør ikke være korrelert med politisk erfaring, kjendisstatus eller noe annet som trekker personstemmer. Den alfabetiske ordningen skaper derfor as-if-random-betingelser, og den estimerte effekten bør skyldes utelukkende kandidatenes plassering på stemmeseddelen.</p>
+      <p>Kandidater med stemmetillegg er utelatt, siden de ikke er tilfeldig tildelt sin plassering. Det samme gjelder partiveteranen Odd Einar Dørum, som fikk den siste, hederlige plassen nummer 65 av Venstre i 2019 og 2023 utenfor den alfabetiske ordningen, samt én uteligger som fikk nesten 4000 personstemmer der ingen av de andre kom over 2000.</p>
+      <p>Dette gir et utvalg på 236 kandidater, hvorav 66 står på forsiden av stemmeseddelen.</p>
+
+      <h2>Analysen</h2>
+      <p>Avhengig variabel er antall personstemmer fra velgere som stemte på kandidatens eget parti (<code>personalvotes_own_loc</code>). Behandlingsvariabelen, <code>first_page</code>, er konstruert fra kandidatens listeplass og stemmeseddelens utforming det aktuelle valgåret:</p>
+
+<pre><code>mutate(
+  first_page =
+    case_when(rank_loc > 30 &amp; year &lt; 2019 ~ 0,
+              rank_loc > 31 &amp; year > 2015 ~ 0,
+              .default = 1))</code></pre>
+
+      <p>De to gruppene oppsummeres med et boksplott, og forskjellen i gjennomsnitt testes med en t-test.</p>
+
+      <figure>
+        <img src="assets/ballot-position/boxplot-no.png" alt="Boksplott som sammenligner personstemmer mellom kandidater på forsiden av stemmeseddelen og kandidater på de resterende sidene">
+        <figcaption>Personstemmer etter forsideplassering blant alfabetisk ordnede kandidater</figcaption>
+      </figure>
+
+      <h2>Resultatet</h2>
+      <table>
+        <thead>
+          <tr><th></th><th>Ikke forside</th><th>Forside</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>n</th><td>170</td><td>66</td></tr>
+          <tr><th>Gjennomsnittlig personstemmer (SD)</th><td>184 (241)</td><td>328 (315)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="conclusion-list">
+        <p>Forskjellen i gjennomsnitt er <strong>144 stemmer</strong> til fordel for kandidatene som står på forsiden. Med en p-verdi på 0,001 er resultatet signifikant på 95 % konfidensnivå: den sanne forskjellen i gjennomsnitt er ikke lik 0. Kandidatene får flere personstemmer utelukkende i kraft av å stå på forsiden av stemmeseddelen, noe som bekrefter hypotesen.</p>
+      </div>
+
+      <p>Siden fordelen skyldes brettingen av papiret og ikke noe kandidatene selv har gjort, er det verdt å merke seg at alfabetisk ordning heller ikke er en rettferdig erstatning for en rangering. Den er ikke fullstendig tilfeldig — kandidater kan ikke unnslippe sitt etternavn uten å endre det juridisk, og for kandidater som stiller flere ganger, følger ulempen med fra ett valg til det neste.</p>
+
+      <h2>Dataene</h2>
+      <p>Datasettet omfatter kandidater fra de ni partiene med stabil representasjon i Oslo bystyre i kommunevalgene 2011, 2015, 2019 og 2023. Det er utledet fra to datasett som finnes på <a href="https://www.jon.fiva.no/data.htm">jon.fiva.no/data.htm</a>: Local Candidate Dataset (LCD v12) av Jon H. Fiva, Rune J. Sørensen og Reidar Vøllo, og Norwegian Parliamentary Elections 1906–2021 av Jon H. Fiva og Daniel M. Smith.</p>
+
+      <p style="margin-top:32px; color: var(--text-muted); font-size: 0.9rem;">Analysen er utført i R med <a href="https://www.tidyverse.org/">tidyverse</a> og <a href="https://www.danieldsjoberg.com/gtsummary/">gtsummary</a>. Se hele kildekoden i <a href="https://github.com/agasadlowska/R_projects/blob/main/BallotPosition/first_page_natural_experiment.qmd">first_page_natural_experiment.qmd</a>.</p>
+
+    </article>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <a href="index.html">← Tilbake til alle prosjekter</a> · <a href="https://github.com/agasadlowska/R_projects">Kildekode på GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
